@@ -9,30 +9,34 @@ from datetime import datetime
 main = Blueprint('main', __name__)
 
 
-@main.route('/')
-def home():
-    return jsonify({"message": "🗂️ Welcome to the Project Tracker API 🗂️"})
-
-# ---------- Authentication Routes ----------
-
 @main.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
     username = data.get('username')
     email = data.get('email')
     password = data.get('password')
-    admin_secret = data.get('adminSecret')
+    admin_secret = data.get('adminSecret')  # Optional field for admin registration
 
-    # Basic validation
+    
+    # Basic validation for required fields
     if not all([username, email, password]):
         return jsonify({"error": "Username, email, and password are required"}), 400
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "Email already exists"}), 409
 
-    # Check if user should be admin
-    is_admin = admin_secret == app.config.get('ADMIN_SECRET') if admin_secret else False
+    # Check if user wants to register as admin and validate the admin secret
+    if admin_secret:
+        # If the user wants to register as admin, validate the admin secret
+        if admin_secret == app.config.get('ADMIN_SECRET'):
+            is_admin = True  # Set admin status to true if the secret matches
+        else:
+            # Return error immediately if the admin secret is incorrect
+            return jsonify({"error": "Invalid admin secret. Cannot register as admin."}), 403
+    else:
+        # If no adminSecret is provided, the user is registered as a student
+        is_admin = False
 
-    # Create and save user
+    # Create and save the user with appropriate role
     new_user = User(
         username=username,
         email=email,
@@ -41,11 +45,17 @@ def register():
     )
     db.session.add(new_user)
     db.session.commit()
+
+    # Generate verification code and send verification email
     new_user.generate_verification_code()
     send_verification_email(new_user.email, new_user.verification_code)
 
-    return jsonify({"message": "User registered successfully. Check your email for verification code"}), 201
-
+    # Response message with role information
+    role = "Admin" if is_admin else "Student"
+    return jsonify({
+        "message": f"User registered successfully as {role}. Check your email for verification code",
+        "role": role
+    }), 201
 
 @main.route('/verify', methods=['POST'])
 def verify():
@@ -57,9 +67,10 @@ def verify():
     if not user:
         return jsonify({"error": "User not found"}), 404
     if user.is_verified:
-        return jsonify({"message": "User already verified"}), 200
+        return jsonify({"message": "User already verified", "role": "Admin" if user.is_admin else "Student"}), 200
     if user.verify_user(code_entered):
-        return jsonify({"message": "User verified successfully"}), 200
+        role = "Admin" if user.is_admin else "Student"
+        return jsonify({"message": "User verified successfully", "role": role}), 200
     return jsonify({"error": "Invalid verification code"}), 400
 
 @main.route('/login', methods=['POST'])

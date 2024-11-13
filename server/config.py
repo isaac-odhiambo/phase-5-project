@@ -8,11 +8,10 @@ class Config:
     # Application secrets
     SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "fallback-jwt-secret-key")
+    ADMIN_SECRET = os.getenv("ADMIN_SECRET", "fallback-admin-secret")  # Add ADMIN_SECRET here
 
     # Database Configuration - Ensure it points to kin.db in the server/instance folder
     SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'instance', 'kin.db')}"
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Flask-Mail Configuration

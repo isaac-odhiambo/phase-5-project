@@ -1,3 +1,5 @@
+
+import os
 from flask import Flask
 from flask_cors import CORS
 from .config import Config
@@ -6,6 +8,11 @@ from .extensions import db, jwt, mail, migrate, bcrypt
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    # Ensure the instance folder exists
+    instance_path = os.path.join(Config.basedir, 'instance')
+    if not os.path.exists(instance_path):
+        os.makedirs(instance_path)
 
     # Initialize extensions with the app
     db.init_app(app)
@@ -23,6 +30,32 @@ def create_app():
 
     return app
 
+
+# from flask import Flask
+# from flask_cors import CORS
+# from .config import Config
+# from .extensions import db, jwt, mail, migrate, bcrypt
+
+# def create_app():
+#     app = Flask(__name__)
+#     app.config.from_object(Config)
+
+#     # Initialize extensions with the app
+#     db.init_app(app)
+#     jwt.init_app(app)
+#     mail.init_app(app)
+#     migrate.init_app(app, db)
+#     bcrypt.init_app(app)
+
+#     # Enable CORS for all routes
+#     CORS(app, resources={r"/*": {"origins": "*"}})
+
+#     # Register blueprints and routes
+#     from .routes import main
+#     app.register_blueprint(main)
+
+#     return app
+ 
 
 
 
