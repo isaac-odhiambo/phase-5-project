@@ -1,5 +1,5 @@
 # server/routes.py
-from flask import Blueprint, jsonify, request, session, current_app as app
+from flask import Blueprint, jsonify, request, session, current_app as app, url_for, Response
 from .extensions import db, bcrypt, mail  # Import db from extensions
 from .models import User, Project, Cohort, ProjectMember
 from flask_jwt_extended import create_access_token
@@ -11,7 +11,26 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 def home():
-    return jsonify({"message": "🗂️ Welcome to the Project Tracker API 🗂️"})
+    # Collect all routes with clickable links
+    routes = []
+    for rule in app.url_map.iter_rules():
+        if rule.endpoint != 'static':  # Skip static file routes
+            try:
+                # Try building the URL. Skip if it requires parameters.
+                url = url_for(rule.endpoint)
+                routes.append(f"<li><a href='{url}'>{url}</a> - Methods: {', '.join(rule.methods - {'OPTIONS', 'HEAD'})}</li>")
+            except Exception:
+                # Skip routes that require parameters
+                continue
+
+    # Build HTML response
+    html_content = f"""
+    <h1>🗂️ Welcome to the Project Tracker API 🗂️</h1>
+    <ul>
+        {''.join(routes)}
+    </ul>
+    """
+    return Response(html_content, mimetype='text/html')
 
 # ---------- Authentication Routes ----------
 @main.route('/register', methods=['POST'])

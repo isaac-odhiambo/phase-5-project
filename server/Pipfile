@@ -16,6 +16,7 @@ faker = "*"
 python-dotenv = "*"
 flask-restful = "*"
 sqlalchemy-serializer = "*"
+psycopg2 = "*"
 
 [dev-packages]
 

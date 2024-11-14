@@ -11,7 +11,8 @@ class Config:
     ADMIN_SECRET = os.getenv("ADMIN_SECRET", "fallback-admin-secret")  # Add ADMIN_SECRET here
 
     # Database Configuration - Ensure it points to kin.db in the server/instance folder
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'instance', 'kin.db')}"
+    # SQLALCHEMY_DATABASE_URI = f"sqlite:///{os.path.join(basedir, 'instance', 'kin.db')}"
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', "postgresql://my_database_jxx0_user:A9uNvQ8EU9OBApfpXYpWIim9t4DLjbg1@dpg-csr6b15svqrc73fik9fg-a.oregon-postgres.render.com/kin")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Flask-Mail Configuration
