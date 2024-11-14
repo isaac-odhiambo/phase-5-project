@@ -9,6 +9,11 @@ from datetime import datetime
 main = Blueprint('main', __name__)
 
 
+@main.route('/')
+def home():
+    return jsonify({"message": "🗂️ Welcome to the Project Tracker API 🗂️"})
+
+# ---------- Authentication Routes ----------
 @main.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
@@ -268,148 +273,50 @@ def delete_project_member(id):
     db.session.commit()
     return jsonify({"message": "Project member deleted"}), 204
 
-# @main.route('/cohorts', methods=['GET'])
-# def get_cohorts():
-#     cohorts = Cohort.query.all()
-#     return jsonify([cohort.to_dict() for cohort in cohorts]), 200
 
+# ---------- User Routes ----------
 
-# @main.route('/cohorts', methods=['POST'])
-# def create_cohort():
-#     data = request.get_json()
-#     new_cohort = Cohort(
-#         name=data.get('name'),
-#         description=data.get('description'),
-#         github_url=data.get('github_url'),
-#         type=data.get('type'),
-#         start_date=datetime.fromisoformat(data.get('start_date')),
-#         end_date=datetime.fromisoformat(data.get('end_date'))
-#     )
-#     db.session.add(new_cohort)
-#     db.session.commit()
-#     return jsonify(new_cohort.to_dict()), 201
+@main.route('/users', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    return jsonify([user.to_dict() for user in users]), 200
 
+@main.route('/users', methods=['POST'])
+def create_user():
+    data = request.get_json()
+    new_user = User(
+        username=data.get('username'),
+        email=data.get('email'),
+        password=bcrypt.generate_password_hash(data.get('password')).decode('utf-8'),
+        is_admin=data.get('is_admin', False),
+        is_verified=data.get('is_verified', False)
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify(new_user.to_dict()), 201
 
-# @main.route('/cohorts/<int:id>', methods=['GET'])
-# def get_cohort(id):
-#     cohort = Cohort.query.get_or_404(id)
-#     return jsonify(cohort.to_dict()), 200
+@main.route('/users/<int:id>', methods=['GET'])
+def get_user(id):
+    user = User.query.get_or_404(id)
+    return jsonify(user.to_dict()), 200
 
+@main.route('/users/<int:id>', methods=['PUT'])
+def update_user(id):
+    data = request.get_json()
+    user = User.query.get_or_404(id)
+    user.username = data.get('username', user.username)
+    user.email = data.get('email', user.email)
+    user.is_admin = data.get('is_admin', user.is_admin)
+    user.is_verified = data.get('is_verified', user.is_verified)
+    if 'password' in data:
+        user.password = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+    db.session.commit()
+    return jsonify(user.to_dict()), 200
 
-# @main.route('/cohorts/<int:id>', methods=['PUT'])
-# def update_cohort(id):
-#     data = request.get_json()
-#     cohort = Cohort.query.get_or_404(id)
-#     cohort.name = data.get('name', cohort.name)
-#     cohort.description = data.get('description', cohort.description)
-#     cohort.github_url = data.get('github_url', cohort.github_url)
-#     cohort.type = data.get('type', cohort.type)
-#     cohort.start_date = datetime.fromisoformat(data.get('start_date')) if data.get('start_date') else cohort.start_date
-#     cohort.end_date = datetime.fromisoformat(data.get('end_date')) if data.get('end_date') else cohort.end_date
-#     db.session.commit()
-#     return jsonify(cohort.to_dict()), 200
-
-
-# @main.route('/cohorts/<int:id>', methods=['DELETE'])
-# def delete_cohort(id):
-#     cohort = Cohort.query.get_or_404(id)
-#     db.session.delete(cohort)
-#     db.session.commit()
-#     return jsonify({"message": "Cohort deleted"}), 204
-
-# # ---------- Project Routes ----------
-
-# @main.route('/projects', methods=['GET'])
-# def get_projects():
-#     projects = Project.query.all()
-#     return jsonify([project.to_dict() for project in projects]), 200
-
-
-# @main.route('/projects', methods=['POST'])
-# def create_project():
-#     data = request.get_json()
-#     new_project = Project(
-#         name=data.get('name'),
-#         description=data.get('description'),
-#         github_url=data.get('github_url'),
-#         type=data.get('type'),
-#         cohort_id=data.get('cohort_id')
-#     )
-#     db.session.add(new_project)
-#     db.session.commit()
-#     return jsonify(new_project.to_dict()), 201
-
-
-# @main.route('/projects/<int:id>', methods=['GET'])
-# def get_project(id):
-#     project = Project.query.get_or_404(id)
-#     return jsonify(project.to_dict()), 200
-
-
-# @main.route('/projects/<int:id>', methods=['PUT'])
-# def update_project(id):
-#     data = request.get_json()
-#     project = Project.query.get_or_404(id)
-#     project.name = data.get('name', project.name)
-#     project.description = data.get('description', project.description)
-#     project.github_url = data.get('github_url', project.github_url)
-#     project.type = data.get('type', project.type)
-#     project.cohort_id = data.get('cohort_id', project.cohort_id)
-#     db.session.commit()
-#     return jsonify(project.to_dict()), 200
-
-
-# @main.route('/projects/<int:id>', methods=['DELETE'])
-# def delete_project(id):
-#     project = Project.query.get_or_404(id)
-#     db.session.delete(project)
-#     db.session.commit()
-#     return jsonify({"message": "Project deleted"}), 204
-
-# # ---------- Project Member Routes ----------
-
-# @main.route('/project_members', methods=['GET'])
-# def get_project_members():
-#     members = ProjectMember.query.all()
-#     return jsonify([member.to_dict() for member in members]), 200
-
-
-# @main.route('/project_members', methods=['POST'])
-# def create_project_member():
-#     data = request.get_json()
-#     new_member = ProjectMember(
-#         project_id=data.get('project_id'),
-#         user_id=data.get('user_id'),
-#         role=data.get('role')
-#     )
-#     db.session.add(new_member)
-#     db.session.commit()
-#     return jsonify(new_member.to_dict()), 201
-
-
-# @main.route('/project_members/<int:id>', methods=['GET'])
-# def get_project_member(id):
-#     member = ProjectMember.query.get_or_404(id)
-#     return jsonify(member.to_dict()), 200
-
-
-# @main.route('/project_members/<int:id>', methods=['PUT'])
-# def update_project_member(id):
-#     data = request.get_json()
-#     member = ProjectMember.query.get_or_404(id)
-#     member.project_id = data.get('project_id', member.project_id)
-#     member.user_id = data.get('user_id', member.user_id)
-#     member.role = data.get('role', member.role)
-#     db.session.commit()
-#     return jsonify(member.to_dict()), 200
-
-
-# @main.route('/project_members/<int:id>', methods=['DELETE'])
-# def delete_project_member(id):
-#     member = ProjectMember.query.get_or_404(id)
-#     db.session.delete(member)
-#     db.session.commit()
-#     return jsonify({"message": "Project member deleted"}), 204
-
-
+@main.route('/users/<int:id>', methods=['DELETE'])
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    db.session.delete(user)
+    db.session.commit()
+    return jsonify({"message": "User deleted"}), 204
 
